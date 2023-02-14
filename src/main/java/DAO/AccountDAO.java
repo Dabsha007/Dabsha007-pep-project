@@ -1,24 +1,53 @@
 package DAO;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
+import Model.Account;
 import Util.ConnectionUtil;
 
 public class AccountDAO {
     
+    public static Account getAccount(String username) throws SQLException {
 
-    public static int createAccount(String username, String password) throws SQLException {
-        int ID = 0;
+        PreparedStatement s = ConnectionUtil.getConnection().prepareStatement("SELECT * FROM account WHERE username = ?");
+        s.setString(1, username);
 
-        Statement s = ConnectionUtil.getConnection().createStatement();
-        boolean result = s.execute("INSERT INTO account (`username`, `password`) VALUES ('" + username + "', '" + password  + "')");
-        if(result) {
-            ResultSet set = s.executeQuery("SELECT * FROM account WHERE username='" + username + "'");
+        ResultSet result = s.executeQuery();
 
-            ID = set.getInt(0);
+        while(result.next()) {
+            return new Account(result.getInt("account_id"), result.getString("username"), result.getString("password"));
+
         }
-        return ID;
+        return null;
+        
+    }
+    
+    public static Account getAccount(String username, String password) throws SQLException {
+
+        PreparedStatement s = ConnectionUtil.getConnection().prepareStatement("SELECT * FROM account WHERE username = ? AND password = ? ");
+        s.setString(1, username);
+        s.setString(2, password);
+
+        ResultSet result = s.executeQuery();
+
+        while(result.next()) {
+            return new Account(result.getInt("account_id"), username, password);
+
+        }
+        return null;
+        
+    }
+
+    public static void createAccount(String username, String password) throws SQLException {
+
+        PreparedStatement s = ConnectionUtil.getConnection().prepareStatement("INSERT INTO account (`username`, `password`) VALUES (?, ?)");
+        s.setString(1, username);
+        s.setString(2, password);
+
+        s.execute();
+
+        
     }
 }

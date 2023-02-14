@@ -28,6 +28,7 @@ public class SocialMediaController {
         app.get("example-endpoint", this::exampleHandler);
 
         app.post("/register", this::registerHandler);
+        app.post("/login", this::loginHandler);
         
         return app;
     }
@@ -39,7 +40,7 @@ public class SocialMediaController {
     private void exampleHandler(Context context) {
         context.json("sample text");
     }
-    private void registerHandler(Context ctx) throws JsonMappingException, JsonProcessingException{
+    private void registerHandler(Context ctx) throws JsonMappingException, JsonProcessingException {
 
         ObjectMapper om = new ObjectMapper();
 
@@ -54,16 +55,38 @@ public class SocialMediaController {
             ctx.result("Password is not long enough.");
         }
         else {
-            Account account = null;
             try {
-                account = AccountService.createAccount(data.username, data.password);
-
-                ctx.json(account);
-                System.out.println(account);
+                AccountService.createAccount(ctx, data.username, data.password);
             } catch (SQLException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
                 ctx.status(400);
+                ctx.result("Error");
+            }
+            
+        }
+    }
+    private void loginHandler(Context ctx) throws JsonMappingException, JsonProcessingException {
+
+        ObjectMapper om = new ObjectMapper();
+
+        RawData data = om.readValue(ctx.body(), RawData.class);
+        
+        if(data.username.length() == 0) {
+            ctx.status(400);
+            ctx.result("Username is blank.");
+        }
+        else if (data.password.length() == 0) {
+            ctx.status(400);
+            ctx.result("Password is blank.");
+        }
+        else {
+            try {
+                AccountService.login(ctx, data.username, data.password);
+            } catch (SQLException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                ctx.status(401);
                 ctx.result("Error");
             }
             
